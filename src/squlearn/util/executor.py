@@ -47,25 +47,26 @@ class Executor:
     :doc:`User Guide: The Executor Class </user_guide/executor>`
 
     Args:
-        execution (Union[str, Backend, QiskitRuntimeService, Session, BaseEstimator, BaseSampler]): The execution environment, possible inputs are:
+        execution (Union[str, Backend, QiskitRuntimeService, Session, BaseEstimator, BaseSampler]):
+            The execution environment, possible inputs are:
 
-                                                                                                                     * A string, that specifics the simulator
-                                                                                                                       backend (``"statevector_simulator"`` or ``"qasm_simulator"``)
-                                                                                                                     * A Qiskit backend, to run the jobs on IBM Quantum
-                                                                                                                       systems or simulators
-                                                                                                                     * A QiskitRuntimeService, to run the jobs on the Qiskit Runtime service
-                                                                                                                       In this case the backend has to be provided separately via ``backend=``
-                                                                                                                     * A Session, to run the jobs on the Qiskit Runtime service
-                                                                                                                     * A Estimator primitive (either simulator or Qiskit Runtime primitive)
-                                                                                                                     * A Sampler primitive (either simulator or Qiskit Runtime primitive)
-
-                                                                                                                     Default is the initialization with the :class:`StatevectorSimulator`.
+                - A string, that specifics the simulator backend (``"statevector_simulator"`` or
+                  ``"qasm_simulator"``)
+                - A Qiskit backend, to run the jobs on IBM Quantum systems or simulators
+                - A QiskitRuntimeService, to run the jobs on the Qiskit Runtime service. In this
+                  case the backend has to be provided separately via ``backend=``
+                - A Session, to run the jobs on the Qiskit Runtime service
+                - A Estimator primitive (either simulator or Qiskit Runtime primitive)
+                - A Sampler primitive (either simulator or Qiskit Runtime primitive)
+            
+            Default is the initialization with the
+            :class:`StatevectorSimulator <qiskit_aer.StatevectorSimulator>`.
         backend (Union[Backend, str, None]): The backend that is used for the execution.
-                                             Only mandatory if a service is provided.
+            Only mandatory if a service is provided.
         options_estimator (Union[Options, Options, None]): The options for the created estimator
-                                                           primitives.
+            primitives.
         options_sampler (Union[Options, Options, None]): The options for the created sampler
-                                                         primitives.
+            primitives.
         log_file (str): The name of the log file, if empty, no log file is created.
         caching (Union[bool, None]): Whether to cache the results of the jobs.
         cache_dir (str): The directory where to cache the results of the jobs.
@@ -84,15 +85,12 @@ class Executor:
         session (Session): The session that is used in the Executor.
         service (QiskitRuntimeService): The service that is used in the Executor.
         estimator (BaseEstimator): The Qiskit estimator primitive that is used in the Executor.
-                                   Different to :meth:`get_estimator`,
-                                   which creates a new estimator object with overwritten methods
-                                   that runs everything through the Executor with
-                                   :meth:`estimator_run`.
-        sampler (BaseSampler): The Qiskit sampler primitive that is used in the Executor.
-                               Different to :meth:`get_sampler`,
-                               which creates a new sampler object with overwritten methods
-                               that runs everything through the Executor with
-                               :meth:`estimator_run`.
+            Different to :meth:`get_estimator`, which creates a new estimator object with
+            overwritten methods that runs everything through the Executor with
+            :meth:`estimator_run`.
+        sampler (BaseSampler): The Qiskit sampler primitive that is used in the Executor. Different
+            to :meth:`get_sampler`, which creates a new sampler object with overwritten methods
+            that runs everything through the Executor with :meth:`estimator_run`.
         shots (int): The number of shots that is used in the Executor.
 
     See Also:

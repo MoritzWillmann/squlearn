@@ -29,7 +29,7 @@ class SLSQP(WrappedOptimizerBase):
 
     Args:
         options (dict): Options for the SLSQP optimizer.
-                        The options are the same as for :meth:`scipy.optimize.minimize`
+            The options are the same as for :func:`scipy.optimize.minimize`
     """
 
     def __init__(self, options: dict = None, callback=default_callback):
@@ -82,7 +82,7 @@ class LBFGSB(WrappedOptimizerBase):
 
     Args:
         options (dict): Options for the L-BFGS-B optimizer.
-                        The options are the same as for :meth:`scipy.optimize.minimize`
+            The options are the same as for :func:`scipy.optimize.minimize`
     """
 
     def __init__(self, options: dict = None, callback=default_callback):
