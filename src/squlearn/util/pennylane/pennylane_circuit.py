@@ -265,7 +265,7 @@ class PennyLaneCircuit:
         pennylane_gates_parameters = []
         pennylane_gates_parameters_dimensions = {}
 
-        symbol_tuple = tuple([sympify(p._symbol_expr) for p in circuit.parameters])
+        symbol_tuple = tuple([p.sympify() for p in circuit.parameters])
 
         for param in circuit.parameters:
             if param.vector.name not in pennylane_gates_parameters:
@@ -299,10 +299,10 @@ class PennyLaneCircuit:
                 param_tuple = ()
                 for param in op.operation.params:
                     if isinstance(param, ParameterExpression):
-                        if param._symbol_expr == None:
+                        if param.sympify() is None:
                             param = param._coeff
                         else:
-                            symbol_expr = sympify(param._symbol_expr)
+                            symbol_expr = param.sympify()
                             f = lambdify(
                                 symbol_tuple, symbol_expr, modules=modules, printer=printer
                             )
@@ -396,7 +396,7 @@ class PennyLaneCircuit:
         symbol_tuple = tuple(
             sum(
                 [
-                    [sympify(p._symbol_expr) for p in sort_parameters_after_index(obs.parameters)]
+                    [p.sympify() for p in sort_parameters_after_index(obs.parameters)]
                     for obs in observable
                 ],
                 [],
@@ -408,7 +408,7 @@ class PennyLaneCircuit:
             pennylane_obs_param_function_ = []
             for coeff in obs.coeffs:
                 if isinstance(coeff, ParameterExpression):
-                    if coeff._symbol_expr == None:
+                    if coeff.sympify() == None:
                         coeff = coeff._coeff
                         if isinstance(coeff, np.complex128) or isinstance(coeff, np.complex64):
                             if np.imag(coeff) != 0:
@@ -419,7 +419,7 @@ class PennyLaneCircuit:
                         else:
                             coeff = float(coeff)
                     else:
-                        symbol_expr = sympify(coeff._symbol_expr)
+                        symbol_expr = coeff.sympify()
                         f = lambdify(symbol_tuple, symbol_expr, modules=modules, printer=printer)
                         pennylane_obs_param_function_.append(f)
                 else:
