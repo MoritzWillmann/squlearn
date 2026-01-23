@@ -13,7 +13,7 @@ import pennylane.numpy as pnp
 import pennylane.pauli as pauli
 from pennylane.operation import Operator
 
-from .pennylane_gates import qiskit_pennylane_gate_dict
+from .pennylane_gates import qiskit_pennylane_gate_dict, qiskit_pennylane_target
 from ..decompose_to_std import decompose_to_std
 
 
@@ -137,7 +137,7 @@ class PennyLaneCircuit:
         # Transpile circuit to supported basis gates and expand blocks automatically
         self._qiskit_circuit = transpile(
             decompose_to_std(circuit),
-            basis_gates=qiskit_pennylane_gate_dict.keys(),
+            target=qiskit_pennylane_target,
             optimization_level=0,
         )
 

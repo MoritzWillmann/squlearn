@@ -38,11 +38,19 @@ else:
 if QISKIT_SMALLER_2_0:
     from qiskit.primitives.backend_estimator import _pauli_expval_with_variance
 else:
+
     def _pauli_expval_with_variance(counts, paulis):
         """Dummy function for Qiskit >= 2.0."""
         pass
 
-from ..executor import QISKIT_SMALLER_2_0, BaseSamplerV1, BaseEstimatorV1, BaseSamplerV2, BaseEstimatorV2
+
+from ..executor import (
+    QISKIT_SMALLER_2_0,
+    BaseSamplerV1,
+    BaseEstimatorV1,
+    BaseSamplerV2,
+    BaseEstimatorV2,
+)
 
 
 def _check_tree_for_matrix_compatibility(element: Union[OpTreeNodeBase, OpTreeLeafBase]):
@@ -868,6 +876,7 @@ def _transform_operator_to_zbasis(
 
     if QISKIT_SMALLER_1_2:
         from qiskit.primitives import BackendEstimator
+
         measurement_circuit = BackendEstimator._measurement_circuit
     else:
         from qiskit.primitives.backend_estimator_v2 import (

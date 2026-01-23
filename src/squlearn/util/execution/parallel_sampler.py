@@ -77,19 +77,20 @@ else:
 
     class BackendSamplerV1:
         """Dummy BackendSamplerV1"""
-    
+
     class PrimitiveSamplerV1:
         """Dummy PrimitiveSamplerV1"""
-    
+
     def _bits_key(bits: tuple, circuit: QuantumCircuit) -> tuple:
         return tuple(
             (
                 circuit.find_bit(bit).index,
-                tuple((reg[0].size, reg[0].name, reg[1]) for reg in circuit.find_bit(bit).registers),
+                tuple(
+                    (reg[0].size, reg[0].name, reg[1]) for reg in circuit.find_bit(bit).registers
+                ),
             )
             for bit in bits
         )
-
 
     def _format_params(param):
         if isinstance(param, np.ndarray):
@@ -99,7 +100,7 @@ else:
         elif isinstance(param, Iterable):
             return tuple(param)
         return param
-    
+
     def _circuit_key(circuit: QuantumCircuit, functional: bool = True) -> tuple:
         """Private key function for QuantumCircuit.
 
@@ -122,7 +123,9 @@ else:
                     _bits_key(data.qubits, circuit),  # qubits
                     _bits_key(data.clbits, circuit),  # clbits
                     data.operation.name,  # operation.name
-                    tuple(_format_params(param) for param in data.operation.params),  # operation.params
+                    tuple(
+                        _format_params(param) for param in data.operation.params
+                    ),  # operation.params
                 )
                 for data in circuit.data
             ),
