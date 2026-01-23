@@ -38,6 +38,7 @@ dependencies = [
     "qiskit-machine-learning>=0.7.0",
     "scipy>=1.8.0",
     "scikit-learn>=1.2.0",
+    "sympy>=1.8",
     "tqdm>=4.1.0",
     "qulacs>=0.6.0",
 ]
