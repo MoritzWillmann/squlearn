@@ -6,7 +6,6 @@ from qiskit import __version__ as qiskit_version
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.circuit import ParameterVector
-from qiskit.primitives import Sampler
 
 from squlearn.util import OpTree
 

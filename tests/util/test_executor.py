@@ -3,13 +3,26 @@ import weakref
 from unittest.mock import MagicMock, Mock, patch
 
 import numpy as np
+from packaging import version
 import pennylane as qml
 import pytest
+from qiskit import __version__ as qiskit_version
 from qiskit.circuit import ParameterVector, QuantumCircuit
-from qiskit.primitives import BackendEstimator, BackendSampler, Estimator, Sampler
 from qiskit.quantum_info import SparsePauliOp
 from qiskit_aer import Aer
 from qiskit_ibm_runtime import IBMBackend, Session
+
+QISKIT_SMALLER_1_0 = version.parse(qiskit_version) < version.parse("1.0.0")
+
+if QISKIT_SMALLER_1_0:
+    from qiskit.primitives import BackendEstimator, BackendSampler, Estimator, Sampler
+else:
+    from qiskit.primitives import (
+        BackendEstimatorV2 as BackendEstimator,
+        BackendSamplerV2 as BackendSampler,
+        StatevectorEstimator as Estimator,
+        StatevectorSampler as Sampler,
+    )
 
 from squlearn.util import Executor
 from squlearn.util.executor import (
