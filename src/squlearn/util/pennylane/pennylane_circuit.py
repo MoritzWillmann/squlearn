@@ -211,7 +211,7 @@ class PennyLaneCircuit:
     @property
     def hash(self) -> str:
         """Hashable object of the circuit and observable for caching"""
-        return str(self._qiskit_circuit) + str(self._qiskit_observable)
+        return str(self._qiskit_circuit.draw(output="text", cregbundle=False)) + str(self._qiskit_observable)
 
     def draw(self, engine: str = "pennylane", **kwargs):
         """Draw the circuit with the specified engine
@@ -280,9 +280,27 @@ class PennyLaneCircuit:
 
             # catch conditions of the gate
             # only c_if is supported, the other cases have been caught before
-            if op.operation.condition is None:
+            if not op.operation.name == "if_else":
                 # No condition (usually the case)
                 pennylane_conditions.append(None)
+                param_tuple = None
+                if len(op.operation.params) >= 1:
+                    param_tuple = ()
+                    for param in op.operation.params:
+                        if isinstance(param, ParameterExpression):
+                            if param.sympify() is None:
+                                param = param._coeff
+                            else:
+                                symbol_expr = param.sympify()
+                                f = lambdify(
+                                    symbol_tuple, symbol_expr, modules=modules, printer=printer
+                                )
+
+                                param_tuple += (f,)
+                        else:
+                            param_tuple += (param,)
+
+                pennylane_gates_param_function.append(param_tuple)
             else:
                 classical_bits = op.operation.condition[0]
                 val = op.operation.condition[1]
@@ -292,26 +310,7 @@ class PennyLaneCircuit:
                     i = [circuit.find_bit(b).index for b in classical_bits]
                 # add indices of classical bits containing measured values
                 # and value of the conditions (measurement equal to val)
-                pennylane_conditions.append((i, val))
-
-            param_tuple = None
-            if len(op.operation.params) >= 1:
-                param_tuple = ()
-                for param in op.operation.params:
-                    if isinstance(param, ParameterExpression):
-                        if param.sympify() is None:
-                            param = param._coeff
-                        else:
-                            symbol_expr = param.sympify()
-                            f = lambdify(
-                                symbol_tuple, symbol_expr, modules=modules, printer=printer
-                            )
-
-                            param_tuple += (f,)
-                    else:
-                        param_tuple += (param,)
-
-            pennylane_gates_param_function.append(param_tuple)
+                pennylane_conditions += [(i, val)]*len(op.operation.params[0].data)
 
             if op.operation.name == "measure":
                 # Capture special case of measurement, that is stored in classical bits
@@ -324,6 +323,45 @@ class PennyLaneCircuit:
                 ]
                 pennylane_gates.append(("measure", clbits))
                 pennylane_gates_wires.append(wires)
+            elif op.operation.name == "if_else":
+                if op.operation.params[1] is not None:
+                    raise NotImplementedError(
+                        "Only if_else with no else branch is supported in sQUlearn's PennyLane backend."
+                    )
+                qubit_map = {
+                    op.operation.params[0].qubits[i]: op.qubits[i] for i in range(op.operation.num_qubits)
+                }
+
+                for true_op in op.operation.params[0].data:
+                    if true_op.operation.name not in qiskit_pennylane_gate_dict:
+                        raise NotImplementedError(
+                            f"Gate {true_op.operation.name} is unfortunatly not supported in sQUlearn's PennyLane backend."
+                        )
+
+                    param_tuple = None
+                    if len(true_op.operation.params) >= 1:
+                        param_tuple = ()
+                        for param in true_op.operation.params:
+                            if isinstance(param, ParameterExpression):
+                                if param.sympify() is None:
+                                    param = param._coeff
+                                else:
+                                    symbol_expr = param.sympify()
+                                    f = lambdify(
+                                        symbol_tuple, symbol_expr, modules=modules, printer=printer
+                                    )
+
+                                    param_tuple += (f,)
+                            else:
+                                param_tuple += (param,)
+
+                    pennylane_gates_param_function.append(param_tuple)
+
+                    pennylane_gates.append(qiskit_pennylane_gate_dict[true_op.operation.name])
+                    wires = [
+                        circuit.find_bit(qubit_map[true_op.qubits[i]]).index for i in range(true_op.operation.num_qubits)
+                    ]
+                    pennylane_gates_wires.append(wires)
             else:
                 # All other gates
                 if op.operation.name not in qiskit_pennylane_gate_dict:

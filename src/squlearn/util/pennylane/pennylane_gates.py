@@ -1,5 +1,6 @@
 import pennylane as qml
 from qiskit.transpiler import Target
+from qiskit.circuit import IfElseOp
 
 
 def RXX(theta, wires):
@@ -100,3 +101,5 @@ custom_name_mapping = {
 qiskit_pennylane_target = Target.from_configuration(
     basis_gates=qiskit_pennylane_gate_dict.keys(), custom_name_mapping=custom_name_mapping
 )
+
+qiskit_pennylane_target.add_instruction(IfElseOp, name="if_else")
