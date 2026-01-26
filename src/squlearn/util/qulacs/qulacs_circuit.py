@@ -11,7 +11,11 @@ from qiskit.compiler import transpile
 from qulacs import ParametricQuantumCircuit, QuantumCircuit
 from qulacs import GeneralQuantumOperator, PauliOperator
 
-from .qulacs_gates import qiskit_qulacs_gate_dict, qiskit_qulacs_param_gate_dict
+from .qulacs_gates import (
+    qiskit_qulacs_gate_dict,
+    qiskit_qulacs_param_gate_dict,
+    qiskit_qulacs_target,
+)
 from ..decompose_to_std import decompose_to_std
 
 
@@ -52,7 +56,7 @@ class QulacsCircuit:
         # Transpile circuit to supported basis gates and expand blocks automatically
         self._qiskit_circuit = transpile(
             decompose_to_std(circuit),
-            basis_gates=qiskit_qulacs_gate_dict.keys(),
+            target=qiskit_qulacs_target,
             optimization_level=0,
         )
         self._qiskit_observable = observable
