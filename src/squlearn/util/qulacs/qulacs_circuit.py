@@ -1,6 +1,6 @@
 import numpy as np
 from typing import List, Union, Iterable
-from sympy import lambdify, sympify
+from sympy import lambdify
 
 from qiskit.circuit import QuantumCircuit as QiskitQuantumCircuit
 from qiskit.circuit import ParameterExpression
@@ -147,7 +147,7 @@ class QulacsCircuit:
             func_list_element = lambdify(self._circuit_symbols_tuple, angle.sympify())
             func_grad_list_element = []
             # loop over the parameters in the expression
-            for param_element in angle._parameter_symbols.keys():
+            for param_element in angle.parameters:
                 used_parameters.append(param_element)
                 # get the gradient of the parameter expression wrt the parameter
                 param_grad = angle.gradient(param_element)
@@ -321,7 +321,7 @@ class QulacsCircuit:
         for op in circuit.data:
 
             # mid-circuit measurements and conditions are not supported!
-            if op.operation.condition is not None or op.operation.name == "measure":
+            if hasattr(op.operation, "condition") or op.operation.name == "measure":
                 raise NotImplementedError(
                     "Conditions are not supported in sQUlearn's Qulacs backend."
                 )
@@ -453,7 +453,7 @@ class QulacsCircuit:
                     observable_coeff.append(lambdify(self._observable_symbols_tuple, c.sympify()))
                     func_grad_list_element = []
                     used_parameters_obs_element = []
-                    for param_element in c._parameter_symbols.keys():
+                    for param_element in c.parameters:
                         used_parameters_obs_element.append(param_element)
                         # information about the gradient of the parameter expression
                         # the 1j fixes a bug in qiskit
