@@ -266,10 +266,8 @@ class PennyLaneCircuit:
         pennylane_gates_wires = []  # List of PennyLane gate wires
         pennylane_conditions = []  # List of PennyLane gate conditions (classical bits and values)
         pennylane_gate_parameters = []  # List of PennyLane gate parameters
-        pennylane_gate_parameters_dimensions = (
-            {}
-        )
-        
+        pennylane_gate_parameters_dimensions = {}
+
         # Dictionary of PennyLane gate parameter dimensions
         for param in circuit.parameters:
             if param.vector.name not in pennylane_gate_parameters:
@@ -311,40 +309,14 @@ class PennyLaneCircuit:
                     for i in range(op.operation.num_qubits)
                 }
 
-                # Iterate over the operations in the if_else statement
-                for true_op in op.operation.params[0].data:
-                    # Check if the operation is supported in PennyLane
-                    if true_op.operation.name not in qiskit_pennylane_gate_dict:
-                        raise NotImplementedError(
-                            f"Gate {true_op.operation.name} is unfortunatly not supported in sQUlearn's PennyLane backend."
-                        )
-
-                    # Get the parameter tuple of the operation
-                    param_tuple = None
-                    if len(true_op.operation.params) >= 1:
-                        param_tuple = ()
-                        for param in true_op.operation.params:
-                            if isinstance(param, ParameterExpression):
-                                if param.sympify() is None:
-                                    param = param._coeff
-                                else:
-                                    symbol_expr = param.sympify()
-                                    f = lambdify(
-                                        symbol_tuple, symbol_expr, modules=modules, printer=printer
-                                    )
-
-                                    param_tuple += (f,)
-                            else:
-                                param_tuple += (param,)
-
-                    # Add the gate, parameter function and wires to the lists
-                    pennylane_gates_parameter_functions.append(param_tuple)
-                    pennylane_gates.append(qiskit_pennylane_gate_dict[true_op.operation.name])
-                    wires = [
-                        circuit.find_bit(qubit_map[true_op.qubits[i]]).index
-                        for i in range(true_op.operation.num_qubits)
-                    ]
-                    pennylane_gates_wires.append(wires)
+                (
+                    if_else_pennylane_gates,
+                    if_else_pennylane_gates_parameter_functions,
+                    if_else_pennylane_gates_wires,
+                    _,
+                    _,
+                    _,
+                ) = self.build_circuit_instructions(op.operation.params[0])
 
             else:
                 # Add the condition None to the list of conditions
