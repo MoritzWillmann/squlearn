@@ -1006,7 +1006,9 @@ def _measure_all_unmeasured(circ_in, final_measurements: bool = False):
             else:
                 clbits = [circ.find_bit(i)[0] for i in cargs]
             operation = instruction.copy()
-            if instruction.condition:  # to adjust the clbits of c_if
+            if (
+                hasattr(instruction, "condition") and instruction.condition
+            ):  # to adjust the clbits of c_if
                 operation.condition = (
                     Clbit(
                         circ_new.cregs[0],

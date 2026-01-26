@@ -3257,7 +3257,7 @@ def check_for_incircuit_measurements(circuit: QuantumCircuit, mode="all"):
 
     for op in circuit.data:
         if mode == "all" or mode == "condition":
-            if op.operation.condition:
+            if hasattr(op.operation, "condition") and op.operation.condition:
                 return True
         if mode == "all" or mode == "clbits":
             if len(op.clbits) > 0:
