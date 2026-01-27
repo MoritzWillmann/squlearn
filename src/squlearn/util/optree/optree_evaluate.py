@@ -816,13 +816,19 @@ def _evaluate_expectation_from_sampler(
 
     # Calulate the expectation value with internal Qiskit function
     if primitives_v2:
-        exp_val = np.array(
-            [
-                np.real_if_close(results[icirc + offset].expectation_values(operator[iop]))
-                for icirc, oplist in enumerate(flatted_resort_list)
-                for iop in oplist
-            ]
-        )
+        exp_val = np.zeros(sum(len(sublist) for sublist in flatted_resort_list))
+        i = 0
+        for icirc, oplist in enumerate(flatted_resort_list):
+            for iop in oplist:
+                try:
+                    ev = results[icirc + offset].expectation_values(operator[iop])
+                    exp_val[i] = np.real_if_close(ev, 1e-10)
+                except ValueError as e:
+                    if str(e) == "Empty observable was detected.":
+                        pass
+                    else:
+                        raise e
+                i += 1
     else:
         exp_val = np.array(
             [
