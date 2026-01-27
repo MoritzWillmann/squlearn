@@ -46,8 +46,8 @@ class TestOpTreeDerivative:
         val_dd = OpTree.evaluate.evaluate_with_estimator(qc_dd, operator, p_array, {}, estimator)
 
         # Compare numerical and analytical derivatives
-        assert np.linalg.norm(np.abs(np.gradient(val, p_val)[1:-1] - val_d[1:-1])) < 0.15
-        assert np.linalg.norm(np.abs(np.gradient(val_d, p_val)[2:-2] - val_dd[2:-2])) < 1.5
+        assert np.allclose(np.gradient(val, p_val)[1:-1], val_d[1:-1], rtol=1e-2)
+        assert np.allclose(np.gradient(val_d, p_val)[2:-2], val_dd[2:-2], rtol=1e-2)
 
     def test_qc_gradient(self):
         """Function for testing derivatives of the circuit"""
