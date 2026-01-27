@@ -33,9 +33,15 @@ from squlearn.util.executor import (
     SessionContextMisuseWarning,
 )
 from squlearn.util.pennylane import PennyLaneCircuit
+from squlearn.util.qulacs import QulacsCircuit
+from squlearn.util.qulacs.qulacs_execution import (
+    qulacs_evaluate,
+    qulacs_evaluate_statevector,
+    qulacs_evaluate_probabilities,
+)
 
 
-class TestExecutor:
+class TestExecutorQiskit:
     @pytest.fixture(scope="module")
     def ExecutorSampler(self) -> Executor:
         """Executor with Sampler initialization."""
@@ -59,27 +65,12 @@ class TestExecutor:
     @pytest.fixture(scope="module")
     def ExecutorBackendSampler(self) -> Executor:
         """Executor with BackendSampler initialization."""
-        return Executor(BackendSampler(Aer.get_backend("aer_simulator")), seed=0)
+        return Executor(BackendSampler(backend=Aer.get_backend("aer_simulator")), seed=0)
 
     @pytest.fixture(scope="module")
     def ExecutorBackendEstimator(self) -> Executor:
         """Executor with BackendEstimator initialization."""
-        return Executor(BackendEstimator(Aer.get_backend("aer_simulator")), seed=0)
-
-    @pytest.fixture(scope="module")
-    def ExecutorPennyLane(self) -> Executor:
-        """Executor with PennyLane initialization."""
-        return Executor("pennylane", seed=0)
-
-    @pytest.fixture(scope="module")
-    def ExecutorPennyLaneShots(self) -> Executor:
-        """Executor with PennyLane initialization."""
-        return Executor("pennylane", seed=0, shots=1024)
-
-    @pytest.fixture(scope="module")
-    def ExecutorPennyLaneDevice(self) -> Executor:
-        """Executor with PennyLane initialization."""
-        return Executor(qml.device("lightning.qubit", wires=2), seed=0)
+        return Executor(BackendEstimator(backend=Aer.get_backend("aer_simulator")), seed=0)
 
     @pytest.fixture(scope="module")
     def ExecutorParallelSampler(self) -> Executor:
@@ -122,9 +113,6 @@ class TestExecutor:
             "ExecutorBackendEstimator",
             "ExecutorParallelSampler",
             "ExecutorParallelEstimator",
-            "ExecutorPennyLane",
-            "ExecutorPennyLaneShots",
-            "ExecutorPennyLaneDevice",
         ],
     )
     def test_shots(self, executor_str, request):
@@ -141,9 +129,6 @@ class TestExecutor:
             "ExecutorBackendEstimator": 1024,
             "ExecutorParallelSampler": None,
             "ExecutorParallelEstimator": None,
-            "ExecutorPennyLane": None,
-            "ExecutorPennyLaneShots": 1024,
-            "ExecutorPennyLaneDevice": None,
         }
 
         assert executor.shots == assert_dict[executor_str]
@@ -232,6 +217,68 @@ class TestExecutor:
             res = estimator.run([(simple_circuit, observable)]).result()
             assert np.isclose(res[0].metadata["target_precision"], 0.1, 0.01)
             assert np.isclose(res[0].data.evs, assert_dict[executor_str], 0.1)
+
+
+class TestExecutorPennyLane:
+
+    @pytest.fixture(scope="module")
+    def ExecutorPennyLane(self) -> Executor:
+        """Executor with PennyLane initialization."""
+        return Executor("pennylane", seed=0)
+
+    @pytest.fixture(scope="module")
+    def ExecutorPennyLaneShots(self) -> Executor:
+        """Executor with PennyLane initialization."""
+        return Executor("pennylane", seed=0, shots=1024)
+
+    @pytest.fixture(scope="module")
+    def ExecutorPennyLaneDevice(self) -> Executor:
+        """Executor with PennyLane initialization."""
+        return Executor(qml.device("lightning.qubit", wires=2), seed=0)
+
+    @pytest.fixture(scope="module")
+    def simple_circuit(self):
+        """Creates a simple circuit for testing."""
+        qc = QuantumCircuit(2)
+        qc.x([0, 1])
+        return qc
+
+    @pytest.fixture(scope="module")
+    def parameterized_circuit(self):
+        x = ParameterVector("x", 2)
+        qc = QuantumCircuit(2)
+        qc.ry(x[0], 0)
+        qc.ry(x[1], 1)
+        return qc
+
+    @pytest.fixture(scope="module")
+    def observable(self):
+        """Creates a simple observable for testing."""
+        return SparsePauliOp("ZZ")
+
+    @pytest.mark.parametrize(
+        "executor_str",
+        [
+            "ExecutorPennyLane",
+            "ExecutorPennyLaneShots",
+            "ExecutorPennyLaneDevice",
+        ],
+    )
+    def test_shots(self, executor_str, request):
+        """Tests of the default shots and the set_shots method work."""
+
+        executor = request.getfixturevalue(executor_str)
+
+        assert_dict = {
+            "ExecutorPennyLane": None,
+            "ExecutorPennyLaneShots": 1024,
+            "ExecutorPennyLaneDevice": None,
+        }
+
+        assert executor.shots == assert_dict[executor_str]
+        executor.set_shots(1234)
+        assert executor.shots == 1234
+        assert executor.get_shots() == 1234
 
     @pytest.mark.parametrize(
         "executor_str",
@@ -330,6 +377,90 @@ class TestExecutor:
             circuit, [([np.pi, np.pi],), ([np.pi, np.pi],), ([np.pi, np.pi],), ([np.pi, np.pi],)]
         )
         assert np.allclose(assert_dict[executor_str], res)
+
+
+class TestExecutorQulacs:
+
+    @pytest.fixture(scope="module")
+    def ExecutorQulacs(self) -> Executor:
+        """Executor with Qulacs initialization."""
+        return Executor("qulacs", seed=0)
+
+    @pytest.fixture(scope="module")
+    def simple_circuit(self):
+        """Creates a simple circuit for testing."""
+        qc = QuantumCircuit(2)
+        qc.x([0, 1])
+        return qc
+
+    @pytest.fixture(scope="module")
+    def parameterized_circuit(self):
+        x = ParameterVector("x", 2)
+        qc = QuantumCircuit(2)
+        qc.ry(x[0], 0)
+        qc.ry(x[1], 1)
+        return qc
+
+    @pytest.fixture(scope="module")
+    def observable(self):
+        """Creates a simple observable for testing."""
+        return SparsePauliOp("ZZ")
+
+    def test_shots(self, ExecutorQulacs):
+        """Tests of the default shots and the set_shots method work."""
+
+        executor = ExecutorQulacs
+        assert executor.shots == None
+
+    @pytest.mark.parametrize(
+        "qulacs_execution_func",
+        [
+            qulacs_evaluate,
+            qulacs_evaluate_statevector,
+            qulacs_evaluate_probabilities,
+        ],
+    )
+    def test_qulacs_evaluate_simple(
+        self, qulacs_execution_func, ExecutorQulacs, simple_circuit, observable
+    ):
+        """Tests the Qulacs execution of a circuit with an observable return type."""
+
+        assert_dict = {
+            "qulacs_evaluate": 1.0,
+            "qulacs_evaluate_probabilities": np.array([0.0, 0.0, 0.0, 1.0]),
+            "qulacs_evaluate_statevector": np.array([0.0, 0.0, 0.0, 1.0]),
+        }
+
+        executor = ExecutorQulacs
+        circuit = QulacsCircuit(simple_circuit, observable)
+
+        res = executor.qulacs_execute(qulacs_execution_func, circuit)
+        assert np.allclose(assert_dict[qulacs_execution_func.__name__], res)
+
+    @pytest.mark.parametrize(
+        "qulacs_execution_func",
+        [
+            qulacs_evaluate,
+            qulacs_evaluate_statevector,
+            qulacs_evaluate_probabilities,
+        ],
+    )
+    def test_qulacs_evaluate_parameterized(
+        self, qulacs_execution_func, ExecutorQulacs, parameterized_circuit, observable
+    ):
+        """Tests the Qulacs execution of a circuit with an observable return type."""
+
+        assert_dict = {
+            "qulacs_evaluate": 1.0,
+            "qulacs_evaluate_probabilities": np.array([0.0, 0.0, 0.0, 1.0]),
+            "qulacs_evaluate_statevector": np.array([0.0, 0.0, 0.0, 1.0]),
+        }
+
+        executor = ExecutorQulacs
+        circuit = QulacsCircuit(parameterized_circuit, observable)
+
+        res = executor.qulacs_execute(qulacs_execution_func, circuit, x=[np.pi, np.pi])
+        assert np.allclose(assert_dict[qulacs_execution_func.__name__], res)
 
 
 class TestExecutorCleanup:
